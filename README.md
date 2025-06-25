@@ -141,8 +141,8 @@ Auto-generated config at `~/.db-price-hunter/config.json`:
 
 ```
 db-price-hunter/
-├── db-price-analyzer.js      # Main CLI application (439 lines)
-├── src/                      # Core modules (refactored from 1583→439 lines main file)
+├── db-price-analyzer.js      # Main CLI application
+├── src/                      # Core modules
 │   ├── journey-search.js    # All search functions (same-day, one-way, multi-day)
 │   ├── user-interface.js    # Interactive prompts & input handling
 │   ├── results-display.js   # Results formatting & output

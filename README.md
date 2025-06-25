@@ -141,15 +141,22 @@ Auto-generated config at `~/.db-price-hunter/config.json`:
 
 ```
 db-price-hunter/
-├── db-price-analyzer.js      # Main CLI application
-├── src/                      # Core modules
+├── db-price-analyzer.js      # Main CLI application (439 lines)
+├── src/                      # Core modules (refactored from 1583→439 lines main file)
+│   ├── journey-search.js    # All search functions (same-day, one-way, multi-day)
+│   ├── user-interface.js    # Interactive prompts & input handling
+│   ├── results-display.js   # Results formatting & output
+│   ├── cli-handler.js       # Command-line mode processing
+│   ├── journey-utils.js     # Date/time utilities & journey extraction
 │   ├── cli-args.js          # Command-line parsing & concurrency options
 │   ├── config.js            # Configuration management
 │   ├── search-management.js # Save/load search functionality
 │   ├── output-formatters.js # Output formats & parallel search progress
 │   ├── error-handler.js     # Parallel search with batch processing
 │   ├── time-preferences.js  # Time filtering logic
-│   └── ...                  # Other core modules
+│   ├── time-selector.js     # Time preference UI
+│   ├── station-selector.js  # Station selection UI
+│   └── cities.js            # City/station data & search
 ├── examples/                 # Demo scripts
 │   ├── animation-demo.js    # Train animation showcase
 │   └── ...                  # Debug utilities

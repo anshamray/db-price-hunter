@@ -1,0 +1,31 @@
+{
+  "name": "db-price-hunter",
+  "version": "1.4.0",
+  "main": "db-price-analyzer.js",
+  "type": "module",
+  "bin": {
+    "db-price-hunter": "./db-price-analyzer.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "start": "node --no-warnings db-price-analyzer.js",
+    "hunt": "node --no-warnings db-price-analyzer.js",
+    "demo": "node --no-warnings examples/animation-demo.js",
+    "help": "node --no-warnings db-price-analyzer.js --help"
+  },
+  "keywords": ["deutsche-bahn", "db", "train", "price-hunter", "bargain", "cli", "travel", "germany", "cheap-tickets", "deals"],
+  "author": "DB Price Hunter Contributors",
+  "license": "MIT",
+  "description": "🎯 Hunt for the cheapest Deutsche Bahn train tickets with flexible routing, time preferences, and fun train animations",
+  "dependencies": {
+    "db-vendo-client": "^6.8.2",
+    "inquirer": "^12.6.3"
+  },
+  "devDependencies": {
+    "@vitest/ui": "^3.2.4",
+    "vitest": "^3.2.4"
+  }
+}

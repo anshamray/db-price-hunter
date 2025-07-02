@@ -14,14 +14,30 @@
     "start": "node --no-warnings db-price-analyzer.js",
     "hunt": "node --no-warnings db-price-analyzer.js",
     "demo": "node --no-warnings examples/animation-demo.js",
-    "help": "node --no-warnings db-price-analyzer.js --help"
+    "help": "node --no-warnings db-price-analyzer.js --help",
+    "bot": "node --no-warnings bot/bot.js",
+    "bot:dev": "node --watch --no-warnings bot/bot.js"
   },
-  "keywords": ["deutsche-bahn", "db", "train", "price-hunter", "bargain", "cli", "travel", "germany", "cheap-tickets", "deals"],
+  "keywords": [
+    "deutsche-bahn",
+    "db",
+    "train",
+    "price-hunter",
+    "bargain",
+    "cli",
+    "travel",
+    "germany",
+    "cheap-tickets",
+    "deals"
+  ],
   "author": "DB Price Hunter Contributors",
   "license": "MIT",
   "description": "🎯 Hunt for the cheapest Deutsche Bahn train tickets with flexible routing, time preferences, and fun train animations",
   "dependencies": {
+    "@grammyjs/conversations": "^2.1.0",
+    "@grammyjs/menu": "^1.3.0",
     "db-vendo-client": "^6.8.2",
+    "grammy": "^1.36.3",
     "inquirer": "^12.6.3"
   },
   "devDependencies": {

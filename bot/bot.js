@@ -38,12 +38,14 @@ bot.use((ctx, next) => {
 // Conversations middleware
 bot.use(conversations());
 
+// Setup conversations FIRST (before commands that use them)
+setupConversations(bot);
+
 // Setup error handling
 setupErrorHandling(bot);
 
-// Setup handlers
+// Setup commands (after conversations are registered)
 setupCommands(bot);
-setupConversations(bot);
 
 // Global error handling
 bot.catch((err) => {

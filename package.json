@@ -1,7 +1,7 @@
 {
   "name": "db-price-hunter",
   "version": "1.4.0",
-  "main": "db-price-analyzer.js",
+  "main": "bot/bot.js",
   "type": "module",
   "bin": {
     "db-price-hunter": "./db-price-analyzer.js"
@@ -11,7 +11,7 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "start": "node --no-warnings db-price-analyzer.js",
+    "start": "node --no-warnings bot/bot.js",
     "hunt": "node --no-warnings db-price-analyzer.js",
     "demo": "node --no-warnings examples/animation-demo.js",
     "help": "node --no-warnings db-price-analyzer.js --help",

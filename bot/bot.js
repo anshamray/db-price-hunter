@@ -80,6 +80,7 @@ const startBot = async () => {
         // In production/Railway, use webhooks. In development, try polling with timeout
         if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
             console.log('🔄 Production mode: Setting up webhook server...');
+            await bot.init(); // Initialize bot for webhook mode
             await setupWebhookServer();
             await configureWebhook();
         } else {

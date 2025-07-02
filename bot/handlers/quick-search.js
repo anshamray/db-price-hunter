@@ -136,15 +136,17 @@ export async function handleQuickSearch(ctx, text, client, config) {
             reply_markup: createSearchActionKeyboard()
         });
         
-        // Store search in session history
-        if (!ctx.session.searchHistory) {
-            ctx.session.searchHistory = [];
+        // Store search in session history (if available)
+        if (ctx.session) {
+            if (!ctx.session.searchHistory) {
+                ctx.session.searchHistory = [];
+            }
+            ctx.session.searchHistory.push({
+                searchParams,
+                results: results?.length || 0,
+                timestamp: new Date()
+            });
         }
-        ctx.session.searchHistory.push({
-            searchParams,
-            results: results?.length || 0,
-            timestamp: new Date()
-        });
         
         return true;
         

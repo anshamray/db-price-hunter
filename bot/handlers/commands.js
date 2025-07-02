@@ -88,8 +88,10 @@ function setupCallbackHandlers(bot) {
 
         await ctx.answerCallbackQuery();
         
-        // Store route in session
-        ctx.session.selectedRoute = route;
+        // Store route in session (if available)
+        if (ctx.session) {
+            ctx.session.selectedRoute = route;
+        }
         
         await ctx.editMessageText(
             `🚄 *Selected Route*\n` +
@@ -141,7 +143,7 @@ function setupTextHandlers(bot) {
         }
         
         // Skip if user has selected a route and is providing date
-        if (ctx.session.selectedRoute) {
+        if (ctx.session?.selectedRoute) {
             await handleRouteWithDate(ctx, text);
             return;
         }
@@ -166,12 +168,14 @@ function setupTextHandlers(bot) {
 }
 
 async function handleRouteWithDate(ctx, dateText) {
-    const route = ctx.session.selectedRoute;
+    const route = ctx.session?.selectedRoute;
     if (!route) return;
     
     try {
         // Clear the selected route
-        ctx.session.selectedRoute = null;
+        if (ctx.session) {
+            ctx.session.selectedRoute = null;
+        }
         
         // Use the quick search handler with predefined route
         const searchText = `${route.departure.name} ${route.destination.name} ${dateText}`;

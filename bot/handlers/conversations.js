@@ -279,15 +279,17 @@ async function searchConversation(conversation, ctx) {
                 reply_markup: createSearchActionKeyboard()
             });
 
-            // Store search in session
-            if (!ctx.session.searchHistory) {
-                ctx.session.searchHistory = [];
+            // Store search in session (if available)
+            if (ctx.session) {
+                if (!ctx.session.searchHistory) {
+                    ctx.session.searchHistory = [];
+                }
+                ctx.session.searchHistory.push({
+                    searchParams,
+                    results: results.length,
+                    timestamp: new Date()
+                });
             }
-            ctx.session.searchHistory.push({
-                searchParams,
-                results: results.length,
-                timestamp: new Date()
-            });
 
         } catch (error) {
             console.error('Search error in conversation:', error);

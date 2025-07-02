@@ -14,7 +14,7 @@ export function formatTelegramResults(results, searchParams) {
     const topResults = results.slice(0, 5);
     
     topResults.forEach((result, index) => {
-        const price = result.totalPrice ? `€${result.totalPrice}` : 'Price unavailable';
+        const price = result.totalPrice ? `€${Number(result.totalPrice).toFixed(2)}` : 'Price unavailable';
         const date = new Date(result.date).toLocaleDateString('en-GB', {
             weekday: 'short',
             day: '2-digit',

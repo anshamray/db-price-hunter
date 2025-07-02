@@ -5,6 +5,7 @@ import { conversations } from '@grammyjs/conversations';
 import { setupCommands } from './handlers/commands.js';
 import { setupConversations } from './handlers/conversations.js';
 import { setupErrorHandling } from './middleware/error.js';
+import { initializeCalendar, handleCalendarCallback, isCalendarCallback } from './utils/calendar.js';
 
 // Validate required environment variables
 if (!process.env.BOT_TOKEN) {
@@ -38,6 +39,9 @@ bot.use((ctx, next) => {
 // Conversations middleware
 bot.use(conversations());
 
+// Initialize calendar
+initializeCalendar(bot);
+
 // Setup conversations FIRST (before commands that use them)
 setupConversations(bot);
 
@@ -46,6 +50,25 @@ setupErrorHandling(bot);
 
 // Setup commands (after conversations are registered)
 setupCommands(bot);
+
+// Handle calendar callbacks
+bot.on('callback_query:data', async (ctx, next) => {
+    if (isCalendarCallback(ctx)) {
+        const result = handleCalendarCallback(ctx);
+        if (result.success) {
+            // Calendar date was selected - this will be handled by conversation
+            await ctx.answerCallbackQuery();
+        } else if (result.navigating) {
+            // Still navigating calendar - answer callback to remove loading state
+            await ctx.answerCallbackQuery();
+        } else if (result.error) {
+            await ctx.answerCallbackQuery(`Calendar error: ${result.error}`);
+        }
+    } else {
+        // Not a calendar callback, continue to other handlers
+        await next();
+    }
+});
 
 // Global error handling
 bot.catch((err) => {

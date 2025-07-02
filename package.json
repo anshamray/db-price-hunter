@@ -39,7 +39,8 @@
     "@grammyjs/storage-free": "^2.5.1",
     "db-vendo-client": "^6.8.2",
     "grammy": "^1.36.3",
-    "inquirer": "^12.6.3"
+    "inquirer": "^12.6.3",
+    "telegram-inline-calendar": "^1.10.0"
   },
   "devDependencies": {
     "@vitest/ui": "^3.2.4",

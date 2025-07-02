@@ -8,6 +8,7 @@ import { lookupStation } from '../../src/cli-handler.js';
 import { validateDate, validateStationName, sanitizeInput } from '../utils/validator.js';
 import { formatTelegramResults, formatSearchProgress } from '../utils/formatter.js';
 import { createTripTypeKeyboard, createTimePreferenceKeyboard, createSearchActionKeyboard } from './keyboards.js';
+import { showCalendar, handleCalendarCallback, isCalendarCallback, formatDateForDisplay } from '../utils/calendar.js';
 
 const client = createClient(dbnavProfile, 'db-price-hunter-bot');
 
@@ -150,37 +151,97 @@ async function searchConversation(conversation, ctx) {
         await tripTypeCtx.editMessageText(
             `✅ Trip type: *${tripTypeLabel}*\n\n` +
             `📅 *Step 4/4: Travel Date*\n\n` +
-            `Enter your travel date or date range:\n` +
-            `• Single date: \`2025-08-15\`\n` +
-            `• Date range: \`2025-08-15 to 2025-08-20\``,
+            `Choose how to select your date:`,
             {
                 parse_mode: 'Markdown',
                 reply_markup: {
-                    inline_keyboard: [[
-                        { text: '❌ Cancel', callback_data: 'cancel_search' }
-                    ]]
+                    inline_keyboard: [
+                        [{ text: '📅 Calendar', callback_data: 'use_calendar' }],
+                        [{ text: '⌨️ Type Date', callback_data: 'type_date' }],
+                        [{ text: '❌ Cancel', callback_data: 'cancel_search' }]
+                    ]
                 }
             }
         );
         
-        const dateCtx = await conversation.wait();
+        const dateMethodCtx = await conversation.wait();
         
-        if (dateCtx.callbackQuery?.data === 'cancel_search') {
-            await dateCtx.answerCallbackQuery();
-            await dateCtx.editMessageText('❌ Search cancelled.');
+        if (!dateMethodCtx.callbackQuery) {
+            await ctx.reply('❌ Please select a date method or use /search to try again.');
             return;
         }
         
-        if (!dateCtx.message?.text) {
-            await ctx.reply('❌ Please enter a valid date or use /search to try again.');
+        await dateMethodCtx.answerCallbackQuery();
+        
+        if (dateMethodCtx.callbackQuery.data === 'cancel_search') {
+            await dateMethodCtx.editMessageText('❌ Search cancelled.');
             return;
         }
-
-        const dateText = sanitizeInput(dateCtx.message.text);
-        const dateValidation = validateDate(dateText);
         
-        if (!dateValidation.valid) {
-            await ctx.reply(`❌ ${dateValidation.error}\n\nUse /search to try again.`);
+        let dateValidation;
+        
+        if (dateMethodCtx.callbackQuery.data === 'use_calendar') {
+            // Use calendar selection
+            await dateMethodCtx.editMessageText('📅 Select your travel date from the calendar:');
+            
+            const calendarShown = await showCalendar(ctx);
+            if (!calendarShown) {
+                await ctx.reply('❌ Calendar error. Please use /search to try again.');
+                return;
+            }
+            
+            // Wait for calendar selection
+            const calendarCtx = await conversation.wait();
+            
+            if (isCalendarCallback(calendarCtx)) {
+                const calendarResult = handleCalendarCallback(calendarCtx);
+                
+                if (calendarResult.success) {
+                    const selectedDate = calendarResult.date;
+                    await ctx.reply(`✅ Selected date: *${formatDateForDisplay(selectedDate)}*`, { parse_mode: 'Markdown' });
+                    
+                    dateValidation = {
+                        valid: true,
+                        startDate: new Date(selectedDate)
+                    };
+                } else if (calendarResult.error) {
+                    await ctx.reply(`❌ Calendar error: ${calendarResult.error}\n\nUse /search to try again.`);
+                    return;
+                } else {
+                    await ctx.reply('❌ No date selected. Use /search to try again.');
+                    return;
+                }
+            } else {
+                await ctx.reply('❌ Invalid calendar response. Use /search to try again.');
+                return;
+            }
+            
+        } else if (dateMethodCtx.callbackQuery.data === 'type_date') {
+            // Manual date entry
+            await dateMethodCtx.editMessageText(
+                `⌨️ *Manual Date Entry*\n\n` +
+                `Enter your travel date or date range:\n` +
+                `• Single date: \`2025-08-15\`\n` +
+                `• Date range: \`2025-08-15 to 2025-08-20\``,
+                { parse_mode: 'Markdown' }
+            );
+            
+            const dateCtx = await conversation.wait();
+            
+            if (!dateCtx.message?.text) {
+                await ctx.reply('❌ Please enter a valid date or use /search to try again.');
+                return;
+            }
+            
+            const dateText = sanitizeInput(dateCtx.message.text);
+            dateValidation = validateDate(dateText);
+            
+            if (!dateValidation.valid) {
+                await ctx.reply(`❌ ${dateValidation.error}\n\nUse /search to try again.`);
+                return;
+            }
+        } else {
+            await ctx.reply('❌ Invalid selection. Use /search to try again.');
             return;
         }
 

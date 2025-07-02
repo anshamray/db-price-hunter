@@ -81,6 +81,7 @@ const startBot = async () => {
         if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
             console.log('🔄 Production mode: Setting up webhook server...');
             await setupWebhookServer();
+            await configureWebhook();
         } else {
             console.log('🔄 Development mode: Attempting polling...');
             try {
@@ -107,6 +108,44 @@ const startBot = async () => {
     } catch (error) {
         console.error('❌ Failed to start bot:', error);
         process.exit(1);
+    }
+};
+
+// Configure webhook URL with Telegram
+const configureWebhook = async () => {
+    try {
+        // Get webhook URL from Railway or environment
+        const WEBHOOK_URL = process.env.RAILWAY_STATIC_URL 
+            ? `${process.env.RAILWAY_STATIC_URL}/webhook`
+            : process.env.WEBHOOK_URL;
+
+        if (!WEBHOOK_URL) {
+            console.log('⚠️ Could not determine webhook URL - will receive updates when Railway assigns domain');
+            return;
+        }
+
+        console.log('🔧 Configuring webhook...');
+        console.log('🔗 Webhook URL:', WEBHOOK_URL);
+
+        // Set webhook
+        const result = await bot.api.setWebhook(WEBHOOK_URL, {
+            allowed_updates: ['message', 'callback_query']
+        });
+
+        console.log('✅ Webhook configured successfully!');
+        
+        // Get webhook info to verify
+        const webhookInfo = await bot.api.getWebhookInfo();
+        console.log('📊 Webhook status:');
+        console.log('  🔗 URL:', webhookInfo.url);
+        console.log('  📥 Pending updates:', webhookInfo.pending_update_count);
+        if (webhookInfo.last_error_message) {
+            console.log('  ⚠️ Last error:', webhookInfo.last_error_message);
+        }
+        
+    } catch (error) {
+        console.error('❌ Failed to configure webhook:', error.message);
+        console.log('💡 Bot will still work once Railway assigns the public domain');
     }
 };
 

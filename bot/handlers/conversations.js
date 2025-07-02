@@ -11,11 +11,7 @@ import { createTripTypeKeyboard, createTimePreferenceKeyboard, createSearchActio
 
 const client = createClient(dbnavProfile, 'db-price-hunter-bot');
 
-export function setupConversations(bot) {
-    // Register the search conversation
-    bot.use(createConversation(searchConversation));
-}
-
+// Define the search conversation function
 async function searchConversation(conversation, ctx) {
     try {
         // Step 1: Get departure station
@@ -322,4 +318,10 @@ async function searchConversation(conversation, ctx) {
         console.error('Conversation error:', error);
         await ctx.reply('❌ An error occurred during the search. Please try /search again.');
     }
+}
+
+// Export setup function
+export function setupConversations(bot) {
+    // Create and register the search conversation
+    bot.use(createConversation(searchConversation));
 }

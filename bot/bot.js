@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { Bot, GrammyError, HttpError, session } from 'grammy';
-import { conversations, createConversation } from '@grammyjs/conversations';
+import { Bot, GrammyError, HttpError } from 'grammy';
+import { conversations } from '@grammyjs/conversations';
 import { setupCommands } from './handlers/commands.js';
 import { setupConversations } from './handlers/conversations.js';
 import { setupErrorHandling } from './middleware/error.js';
@@ -17,15 +17,23 @@ if (!process.env.BOT_TOKEN) {
 // Initialize bot
 const bot = new Bot(process.env.BOT_TOKEN);
 
-// Session middleware for storing user state
-function initial() {
-    return {
-        selectedRoute: null,
-        searchHistory: []
-    };
-}
+// Simple session storage (in-memory for now)
+const userSessions = new Map();
 
-bot.use(session({ initial }));
+// Middleware to add session to context
+bot.use((ctx, next) => {
+    const userId = ctx.from?.id;
+    if (userId) {
+        if (!userSessions.has(userId)) {
+            userSessions.set(userId, {
+                selectedRoute: null,
+                searchHistory: []
+            });
+        }
+        ctx.session = userSessions.get(userId);
+    }
+    return next();
+});
 
 // Conversations middleware
 bot.use(conversations());
@@ -67,14 +75,71 @@ const startBot = async () => {
             { command: 'help', description: 'Show help and usage information' }
         ]);
         
-        await bot.start();
-        console.log('🤖 DB Price Hunter Bot is running!');
         console.log('📍 Bot commands have been set up in Telegram');
+        
+        // In production/Railway, use webhooks. In development, try polling with timeout
+        if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
+            console.log('🔄 Production mode: Setting up webhook server...');
+            await setupWebhookServer();
+        } else {
+            console.log('🔄 Development mode: Attempting polling...');
+            try {
+                await Promise.race([
+                    bot.start({
+                        drop_pending_updates: true,
+                        timeout: 10,
+                        limit: 100,
+                        allowed_updates: ['message', 'callback_query']
+                    }),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Polling timeout')), 10000)
+                    )
+                ]);
+                console.log('🤖 DB Price Hunter Bot is running with polling!');
+            } catch (pollError) {
+                console.log('⚠️ Polling failed (this is normal in some networks)');
+                console.log('💡 Bot should still work when deployed to Railway');
+                console.log('🔄 Setting up webhook server for local testing...');
+                await setupWebhookServer();
+            }
+        }
         
     } catch (error) {
         console.error('❌ Failed to start bot:', error);
         process.exit(1);
     }
+};
+
+// Setup webhook server for production or when polling fails
+const setupWebhookServer = async () => {
+    const { createServer } = await import('http');
+    
+    const server = createServer(async (req, res) => {
+        if (req.method === 'POST' && req.url === '/webhook') {
+            let body = '';
+            req.on('data', chunk => body += chunk);
+            req.on('end', async () => {
+                try {
+                    const update = JSON.parse(body);
+                    await bot.handleUpdate(update);
+                } catch (error) {
+                    console.error('Webhook error:', error);
+                }
+                res.writeHead(200);
+                res.end('OK');
+            });
+        } else {
+            res.writeHead(200, { 'Content-Type': 'text/plain' });
+            res.end('🤖 DB Price Hunter Bot is running!\n\nSend a POST request to /webhook to handle updates.');
+        }
+    });
+    
+    const PORT = process.env.PORT || 3000;
+    server.listen(PORT, () => {
+        console.log(`🚀 Webhook server listening on port ${PORT}`);
+        console.log('✅ Bot ready for webhooks');
+        console.log(`🔗 Test: http://localhost:${PORT}`);
+    });
 };
 
 // Handle graceful shutdown
